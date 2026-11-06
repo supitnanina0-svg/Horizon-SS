@@ -3,315 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Horizon SS - Hub & Dashboard</title>
+    <title>Horizon SS — Server-Side Management Panel</title>
     <style>
         :root {
-            --bg-main: #060709;
-            --bg-card: #0d0f14;
-            --bg-input: #151821;
+            --bg-base: #08090d;
+            --bg-surface: #0f1117;
+            --bg-card: #141721;
+            --border-color: #212636;
             --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.3);
-            --discord-color: #5865F2;
-            --text-main: #f3f4f6;
-            --text-muted: #6b7280;
-            --border: #1f2937;
-            --success: #10b981;
-            --error: #ef4444;
+            --accent-glow: rgba(59, 130, 246, 0.2);
+            --text-main: #f1f5f9;
+            --text-muted: #64748b;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --font-mono: 'JetBrains Mono', Consolas, monospace;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-base); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
 
-        body {
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
+        aside { width: 240px; background-color: var(--bg-surface); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: space-between; }
+        .brand-box { padding: 24px 20px; font-size: 1.1rem; font-weight: 800; letter-spacing: 1.5px; border-bottom: 1px solid var(--border-color); }
+        .brand-box span { color: var(--accent); }
+        .nav-menu { list-style: none; padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; }
+        .nav-menu li { padding: 10px 14px; border-radius: 6px; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; }
+        .nav-menu li.active { color: var(--text-main); background-color: var(--bg-card); border-left: 3px solid var(--accent); }
 
-        .window-box {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border);
-            width: 100%;
-            max-width: 650px;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-        }
+        .workspace { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        topbar { padding: 16px 32px; background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
 
-        .hidden {
-            display: none !important;
-        }
+        .content-grid { padding: 32px; display: grid; grid-template-columns: 1fr 320px; gap: 24px; max-width: 1400px; width: 100%; margin: 0 auto; }
+        .card { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+        .card-header { font-size: 0.95rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
 
-        .title {
-            font-size: 24px;
-            font-weight: 800;
-            text-align: center;
-            margin-bottom: 20px;
-            background: linear-gradient(45deg, #3b82f6, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        .editor-wrapper { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; }
+        textarea.code-area { width: 100%; height: 260px; background: transparent; color: #38bdf8; border: none; padding: 14px; font-family: var(--font-mono); font-size: 0.85rem; outline: none; resize: none; line-height: 1.5; }
 
-        .input-group {
-            margin-bottom: 18px;
-        }
+        .btn { padding: 10px 20px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+        .btn-primary { background-color: var(--accent); color: #fff; box-shadow: 0 0 15px var(--accent-glow); }
+        .btn-primary:hover { background-color: #2563eb; }
 
-        .input-group label {
-            display: block;
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        input {
-            width: 100%;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 6px;
-            color: white;
-            font-size: 14px;
-            outline: none;
-            transition: border 0.2s;
-        }
-
-        input:focus {
-            border-color: var(--accent);
-        }
-
-        .captcha-box {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border);
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .captcha-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .captcha-checkbox {
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-        }
-
-        .btn {
-            width: 100%;
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn:hover {
-            opacity: 0.9;
-            box-shadow: 0 0 15px var(--accent-glow);
-        }
-
-        .btn-buy {
-            background: #e11d48;
-            margin-top: 10px;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            line-height: 40px;
-        }
-
-        .btn-buy:hover {
-            box-shadow: 0 0 15px rgba(225, 29, 72, 0.4);
-        }
-
-        .nav-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
-
-        .tab-menu {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
-        }
-
-        .tab-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 8px 16px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            border-radius: 4px;
-        }
-
-        .tab-btn.active {
-            color: white;
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
-
-        .game-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            max-height: 250px;
-            overflow-y: auto;
-        }
-
-        .game-card {
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .game-name { font-size: 14px; font-weight: 500; }
-        .game-status { font-size: 11px; color: var(--success); background: rgba(16, 185, 129, 0.1); padding: 2px 6px; border-radius: 4px; }
-
-        .loader-box {
-            background-color: rgba(0,0,0,0.3);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 15px;
-            font-family: monospace;
-            font-size: 13px;
-            color: #45f3ff;
-            word-break: break-all;
-            margin-bottom: 15px;
-        }
-
-        .flex-buttons { display: flex; gap: 10px; }
-        .btn-discord { background: var(--discord-color); text-decoration: none; text-align: center; line-height: 40px; padding: 0 15px; }
-
-        .log-entry { padding: 6px 10px; border-radius: 4px; border-left: 3px solid #6b7280; background: rgba(255,255,255,0.01); font-size: 13px; }
-        .log-exec { border-left-color: #3b82f6; color: #a3e635; }
-        .log-premium { border-left-color: #8b5cf6; color: #f472b6; background: rgba(139, 92, 246, 0.05); font-weight: bold;}
-        
-        .status-msg {
-            font-size: 13px;
-            font-weight: 600;
-            margin-top: 10px;
-            text-align: center;
-        }
+        .terminal-box { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; padding: 14px; height: 180px; font-family: var(--font-mono); font-size: 0.8rem; color: #cbd5e1; overflow-y: auto; line-height: 1.4; }
+        .player-row { background-color: var(--bg-card); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
-    <!-- SECTION 1: SYSTEM GATE & SCANNER -->
-    <div id="loginSection" class="window-box">
-        <div class="title">HORIZON SS GATEWAY</div>
-        
-        <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); padding: 12px; border-radius: 6px; font-size: 13px; color: #fda4af; margin-bottom: 18px; text-align: center;">
-            ⚠️ Anda diwajibkan memiliki GamePass VIP Ranks untuk mendapatkan akses masuk panel.
+    <aside>
+        <div>
+            <div class="brand-box">// <span>HORIZON.SS</span></div>
+            <ul class="nav-menu">
+                <li class="active">Executor Hub</li>
+                <li>Servers Manager</li>
+                <li>GamePass Auth</li>
+            </ul>
         </div>
-
-        <div class="input-group">
-            <label>Roblox Username</label>
-            <input type="text" id="robloxUser" placeholder="Masukkan Username Roblox Anda...">
+        <div style="padding: 16px 20px; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-color);">
+            ● Status: Static Web Ready
         </div>
+    </aside>
 
-        <div class="captcha-box">
-            <div class="captcha-left">
-                <input type="checkbox" id="captchaCheck" class="captcha-checkbox">
-                <span style="font-size: 14px;">Human Verification (Saya bukan robot)</span>
+    <div class="workspace">
+        <topbar>
+            <div>Dashboard / Active Session</div>
+            <div style="font-size: 0.85rem; color: var(--accent); background: var(--bg-card); padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border-color);">
+                GamePass ID: 1963974360 (VIP)
             </div>
-            <svg viewBox="0 0 24 24" width="28" fill="#3b82f6"><path d="M12 2A10 10 0 0 0 2 12a9.9 9.9 0 0 0 2.2 6.2l1.4-1.4A8 8 0 1 1 12 20v2a10 10 0 0 0 0-20z"/></svg>
-        </div>
+        </topbar>
 
-        <button class="btn" id="scanBtn" onclick="scanInventory()">PINDAY INVENTARIS & LOGIN</button>
-        <a href="https://www.roblox.com/game-pass/1963974360/VIP-Ranks" target="_blank" class="btn btn-buy">BELI GAMEPASS VIP RANKS HERE</a>
-        
-        <div id="statusOutput" class="status-msg"></div>
-    </div>
+        <div class="content-grid">
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Luau Server-Side Payload Generator</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Target: Roblox Game</span>
+                    </div>
+                    <div class="editor-wrapper">
+                        <textarea class="code-area" id="payloadInput" placeholder="-- Tulis script server-side (SS) di sini...
+print('Horizon SS Panel Active!')"></textarea>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <button class="btn btn-primary" onclick="simulateExecution()">Simulate Execution</button>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);" id="execStatus">Ready</span>
+                    </div>
+                </div>
 
-    <!-- SECTION 2: DASHBOARD UTAMA -->
-    <div id="dashboardSection" class="window-box hidden">
-        <div class="nav-header">
-            <div>
-                <div class="title" style="margin:0; font-size:20px; text-align: left;">HORIZON_SS PANEL</div>
-                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Welcome, <span id="sessionUser" style="color: #45f3ff; font-weight: bold;">User</span></div>
-            </div>
-            <div style="font-size:12px; color:var(--success); font-weight: bold;">● ACCESS GRANTED</div>
-        </div>
-
-        <div class="tab-menu">
-            <button id="tabBtnMain" class="tab-btn active" onclick="switchTab('main')">Main Loader</button>
-            <button id="tabBtnGames" class="tab-btn" onclick="switchTab('games')">Infected Games</button>
-            <button id="tabBtnLogs" class="tab-btn" onclick="switchTab('logs')">Live Logs</button>
-        </div>
-
-        <!-- TAB CONTENT 1: MAIN LOADER -->
-        <div id="tabMain">
-            <div class="input-group">
-                <label>Script Executor (Require Code)</label>
-                <div class="loader-box" id="scriptBox">
-                    local RemoteEvent = Instance.new("RemoteEvent", game.ReplicatedStorage)
-                    RemoteEvent.Name = "DataRemote"
-                    -- Horizon SS Premium Engine Active
+                <div class="card">
+                    <div class="card-header">Client Terminal Simulation</div>
+                    <div class="terminal-box" id="terminalLog">
+                        [System] Horizon SS Web Dashboard loaded successfully from GitHub Pages.<br>
+                        [Auth] GamePass ID 1963974360 verified for inventory checks.
+                    </div>
                 </div>
             </div>
-            <div class="flex-buttons">
-                <button class="btn" onclick="copyScript()">Copy Script</button>
-                <a href="https://discord.gg" target="_blank" class="btn btn-discord">Join Discord</a>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>Verified Users</span>
+                    <span style="font-size: 0.8rem; color: var(--accent);">VIP Pass</span>
+                </div>
+                <div class="player-row">
+                    <div>
+                        <div style="font-weight: 600;">glitch</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Owner / Creator</div>
+                    </div>
+                    <span style="color: var(--success); font-size: 0.8rem;">● Online</span>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- TAB CONTENT 2: INFECTED GAMES -->
-        <div id="tabGames" class="hidden">
-            <div class="game-grid">
-                <div class="game-card"><span class="game-name">[SS] Brookhaven RP</span><span class="game-status">Infected</span></div>
-                <div class="game-card"><span class="game-name">Adopt Me! Backdoor Test</span><span class="game-status">Infected</span></div>
-");
-const entry = document.createElement("div");
-entry.className = "log-entry";
-let time = new Date().toLocaleTimeString();
-if (type === "EXEC") {
-entry.classList.add("log-exec");
-entry.innerHTML = [${time}] <b>[EXEC]</b> ${message} <br><span style='color:#555;'>Code: ${detail}</span>;
-} else {
-entry.classList.add("log-premium");
-entry.innerHTML = [${time}] <b>[💎 PREMIUM]</b> ${message} (${detail});
-premiumCounter++;
-document.getElementById("premiumCount").innerText = "Premium Inf: " + premiumCounter;
-}
-container.appendChild(entry);
-container.scrollTop = container.scrollHeight;
-}
-function startMockLogs() {
-setInterval(() => {
-if(Math.random() < 0.6) {
-pushLog("EXEC", "Player_" + Math.floor(Math.random()*99) + " memicu DataRemote", "require(1963974360):Boot()");
-} else {
-pushLog("PREMIUM", "Game Terinfeksi Premium Ditemukan", "Visits 10K+");
-}
-}, 4000);
-}
+    <script>
+        function simulateExecution() {
+            const code = document.getElementById('payloadInput').value;
+            const logBox = document.getElementById('terminalLog');
+            const status = document.getElementById('execStatus');
+            const time = new Date().toLocaleTimeString();
+
+            if (!code.trim()) return;
+
+            status.innerText = "Executing...";
+            logBox.innerHTML += `<br>[${time}] <span style="color: var(--accent);">[WEB SIMULATION] Payload compiled & dispatched to game hook.</span>`;
+            logBox.scrollTop = logBox.scrollHeight;
+
+            setTimeout(() => {
+                status.innerText = "Success";
+                logBox.innerHTML += `<br>[${new Date().toLocaleTimeString()}] <span style="color: var(--success);">[SUCCESS] Server executed payload with zero runtime errors.</span>`;
+                logBox.scrollTop = logBox.scrollHeight;
+            }, 500);
+        }
+    </script>
+</body>
+</html>
